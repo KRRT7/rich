@@ -1,4 +1,3 @@
-import re
 from functools import partial, reduce
 from math import gcd
 from operator import itemgetter
@@ -11,7 +10,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Pattern,
     Tuple,
     Union,
 )
@@ -36,7 +34,7 @@ DEFAULT_JUSTIFY: "JustifyMethod" = "default"
 DEFAULT_OVERFLOW: "OverflowMethod" = "fold"
 
 
-_re_whitespace = re.compile(r"\s+$")
+_re_whitespace = None
 
 TextType = Union[str, "Text"]
 """A plain string or a :class:`Text` instance."""
@@ -620,7 +618,7 @@ class Text(JupyterMixin):
 
     def highlight_regex(
         self,
-        re_highlight: Union[Pattern[str], str],
+        re_highlight: "Union[re.Pattern[str], str]",
         style: Optional[Union[GetStyleCallable, StyleType]] = None,
         *,
         style_prefix: str = "",
@@ -642,6 +640,8 @@ class Text(JupyterMixin):
         _Span = Span
         plain = self.plain
         if isinstance(re_highlight, str):
+            import re
+
             re_highlight = re.compile(re_highlight)
         for match in re_highlight.finditer(plain):
             get_span = match.span
@@ -675,6 +675,8 @@ class Text(JupyterMixin):
         Returns:
             int: Number of words highlighted.
         """
+        import re
+
         re_words = "|".join(re.escape(word) for word in words)
         add_span = self._spans.append
         count = 0
@@ -699,6 +701,11 @@ class Text(JupyterMixin):
         """
         text_length = len(self)
         if text_length > size:
+            global _re_whitespace
+            if _re_whitespace is None:
+                import re
+
+                _re_whitespace = re.compile(r"\s+$")
             excess = text_length - size
             whitespace_match = _re_whitespace.search(self.plain)
             if whitespace_match is not None:
@@ -1125,6 +1132,7 @@ class Text(JupyterMixin):
             List[RichText]: A list of rich text, one per line of the original.
         """
         assert separator, "separator must not be empty"
+        import re
 
         text = self.plain
         if separator not in text:
@@ -1320,6 +1328,8 @@ class Text(JupyterMixin):
             int: Number of spaces used to indent code.
         """
 
+        import re
+
         _indentations = {
             len(match.group(1))
             for match in re.finditer(r"^( *)(.*)$", self.plain, flags=re.MULTILINE)
@@ -1357,6 +1367,8 @@ class Text(JupyterMixin):
         text = self.copy()
         text.expand_tabs()
         indent_line = f"{character}{' ' * (_indent_size - 1)}"
+
+        import re
 
         re_indent = re.compile(r"^( *)(.*)$")
         new_lines: List[Text] = []

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import sys
 from enum import IntEnum
 from functools import lru_cache
@@ -293,14 +292,7 @@ class ColorParseError(Exception):
     """The color could not be parsed."""
 
 
-RE_COLOR = re.compile(
-    r"""^
-\#([0-9a-f]{6})$|
-color\(([0-9]{1,3})\)$|
-rgb\(([\d\s,]+)\)$
-""",
-    re.VERBOSE,
-)
+_RE_COLOR = None
 
 
 @rich_repr
@@ -454,7 +446,19 @@ class Color(NamedTuple):
                 number=color_number,
             )
 
-        color_match = RE_COLOR.match(color)
+        global _RE_COLOR
+        if _RE_COLOR is None:
+            import re
+
+            _RE_COLOR = re.compile(
+                r"""^
+\#([0-9a-f]{6})$|
+color\(([0-9]{1,3})\)$|
+rgb\(([\d\s,]+)\)$
+""",
+                re.VERBOSE,
+            )
+        color_match = _RE_COLOR.match(color)
         if color_match is None:
             raise ColorParseError(f"{original_color!r} is not a valid color")
 

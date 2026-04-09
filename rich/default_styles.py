@@ -1,5 +1,6 @@
 from typing import Dict
 
+from .color import Color
 from .style import Style
 
 DEFAULT_STYLES: Dict[str, Style] = {
@@ -124,9 +125,9 @@ DEFAULT_STYLES: Dict[str, Style] = {
     "traceback.note": Style(color="green", bold=True),
     "traceback.group.border": Style(color="magenta"),
     "bar.back": Style(color="grey23"),
-    "bar.complete": Style(color="rgb(249,38,114)"),
-    "bar.finished": Style(color="rgb(114,156,31)"),
-    "bar.pulse": Style(color="rgb(249,38,114)"),
+    "bar.complete": Style(color=Color.from_rgb(249, 38, 114)),
+    "bar.finished": Style(color=Color.from_rgb(114, 156, 31)),
+    "bar.pulse": Style(color=Color.from_rgb(249, 38, 114)),
     "progress.description": Style.null(),
     "progress.filesize": Style(color="green"),
     "progress.filesize.total": Style(color="green"),

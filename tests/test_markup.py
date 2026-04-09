@@ -2,29 +2,29 @@ import pytest
 
 from rich.console import Console
 from rich.errors import MarkupError
-from rich.markup import RE_TAGS, Tag, _parse, escape, render
+from rich.markup import _compile_tags, Tag, _parse, escape, render
 from rich.text import Span, Text
 
 
 def test_re_no_match():
-    assert RE_TAGS.match("[True]") == None
-    assert RE_TAGS.match("[False]") == None
-    assert RE_TAGS.match("[None]") == None
-    assert RE_TAGS.match("[1]") == None
-    assert RE_TAGS.match("[2]") == None
-    assert RE_TAGS.match("[]") == None
+    assert _compile_tags().match("[True]") == None
+    assert _compile_tags().match("[False]") == None
+    assert _compile_tags().match("[None]") == None
+    assert _compile_tags().match("[1]") == None
+    assert _compile_tags().match("[2]") == None
+    assert _compile_tags().match("[]") == None
 
 
 def test_re_match():
-    assert RE_TAGS.match("[true]")
-    assert RE_TAGS.match("[false]")
-    assert RE_TAGS.match("[none]")
-    assert RE_TAGS.match("[color(1)]")
-    assert RE_TAGS.match("[#ff00ff]")
-    assert RE_TAGS.match("[/]")
-    assert RE_TAGS.match("[@]")
-    assert RE_TAGS.match("[@foo]")
-    assert RE_TAGS.match("[@foo=bar]")
+    assert _compile_tags().match("[true]")
+    assert _compile_tags().match("[false]")
+    assert _compile_tags().match("[none]")
+    assert _compile_tags().match("[color(1)]")
+    assert _compile_tags().match("[#ff00ff]")
+    assert _compile_tags().match("[/]")
+    assert _compile_tags().match("[@]")
+    assert _compile_tags().match("[@foo]")
+    assert _compile_tags().match("[@foo=bar]")
 
 
 def test_escape():

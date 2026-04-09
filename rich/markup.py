@@ -1,6 +1,10 @@
-import re
+from __future__ import annotations
+
 from operator import attrgetter
-from typing import Callable, Iterable, List, Match, NamedTuple, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from typing import Match
 
 from ._emoji_replace import _emoji_replace
 from .emoji import EmojiVariant
@@ -8,12 +12,20 @@ from .errors import MarkupError
 from .style import Style
 from .text import Span, Text
 
-RE_TAGS = re.compile(
-    r"""((\\*)\[([a-z#/@][^[]*?)])""",
-    re.VERBOSE,
-)
+_RE_TAGS = None
+_RE_HANDLER = None
 
-RE_HANDLER = re.compile(r"^([\w.]*?)(\(.*?\))?$")
+
+def _compile_tags():
+    global _RE_TAGS
+    if _RE_TAGS is None:
+        import re
+
+        _RE_TAGS = re.compile(
+            r"""((\\*)\[([a-z#/@][^[]*?)])""",
+            re.VERBOSE,
+        )
+    return _RE_TAGS
 
 
 class Tag(NamedTuple):
@@ -39,14 +51,15 @@ class Tag(NamedTuple):
         )
 
 
-_ReStringMatch = Match[str]  # regex match object
-_ReSubCallable = Callable[[_ReStringMatch], str]  # Callable invoked by re.sub
-_EscapeSubMethod = Callable[[_ReSubCallable, str], str]  # Sub method of a compiled re
+_ReStringMatch = "Match[str]"  # regex match object
+_ReSubCallable = "Callable[[_ReStringMatch], str]"  # Callable invoked by re.sub
+_EscapeSubMethod = "Callable[[_ReSubCallable, str], str]"  # Sub method of a compiled re
+
+_RE_ESCAPE = None
 
 
 def escape(
     markup: str,
-    _escape: _EscapeSubMethod = re.compile(r"(\\*)(\[[a-z#/@][^[]*?])").sub,
 ) -> str:
     """Escapes text so that it won't be interpreted as markup.
 
@@ -56,13 +69,18 @@ def escape(
     Returns:
         str: Markup with square brackets escaped.
     """
+    global _RE_ESCAPE
+    if _RE_ESCAPE is None:
+        import re
+
+        _RE_ESCAPE = re.compile(r"(\\*)(\[[a-z#/@][^[]*?])").sub
 
     def escape_backslashes(match: Match[str]) -> str:
         """Called by re.sub replace matches."""
         backslashes, text = match.groups()
         return f"{backslashes}{backslashes}\\{text}"
 
-    markup = _escape(escape_backslashes, markup)
+    markup = _RE_ESCAPE(escape_backslashes, markup)
     if markup.endswith("\\") and not markup.endswith("\\\\"):
         return markup + "\\"
 
@@ -79,7 +97,7 @@ def _parse(markup: str) -> Iterable[Tuple[int, Optional[str], Optional[Tag]]]:
     position = 0
     _divmod = divmod
     _Tag = Tag
-    for match in RE_TAGS.finditer(markup):
+    for match in _compile_tags().finditer(markup):
         full_text, escapes, tag_text = match.groups()
         start, end = match.span()
         if start > position:
@@ -178,7 +196,12 @@ def render(
                     if open_tag.parameters:
                         handler_name = ""
                         parameters = open_tag.parameters.strip()
-                        handler_match = RE_HANDLER.match(parameters)
+                        global _RE_HANDLER
+                        if _RE_HANDLER is None:
+                            import re
+
+                            _RE_HANDLER = re.compile(r"^([\w.]*?)(\(.*?\))?$")
+                        handler_match = _RE_HANDLER.match(parameters)
                         if handler_match is not None:
                             handler_name, match_parameters = handler_match.groups()
                             parameters = (

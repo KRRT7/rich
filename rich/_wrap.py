@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import re
 from typing import Iterable
 
 from ._loop import loop_last
 from .cells import cell_len, chop_cells
 
-re_word = re.compile(r"\s*\S+\s*")
+_re_word = None
 
 
 def words(text: str) -> Iterable[tuple[int, int, str]]:
@@ -14,13 +13,18 @@ def words(text: str) -> Iterable[tuple[int, int, str]]:
     containing (start_index, end_index, word). A "word" in this context may
     include the actual word and any whitespace to the right.
     """
+    global _re_word
+    if _re_word is None:
+        import re
+
+        _re_word = re.compile(r"\s*\S+\s*")
     position = 0
-    word_match = re_word.match(text, position)
+    word_match = _re_word.match(text, position)
     while word_match is not None:
         start, end = word_match.span()
         word = word_match.group(0)
         yield start, end, word
-        word_match = re_word.match(text, end)
+        word_match = _re_word.match(text, end)
 
 
 def divide_line(text: str, width: int, fold: bool = True) -> list[int]:
