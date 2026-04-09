@@ -1,4 +1,3 @@
-import inspect
 import os
 import sys
 import threading
@@ -9,7 +8,6 @@ from datetime import datetime
 from functools import wraps
 from getpass import getpass
 from html import escape
-from inspect import isclass
 from itertools import islice
 from math import ceil
 from time import monotonic
@@ -1321,7 +1319,7 @@ class Console:
         render_iterable: RenderResult
 
         renderable = rich_cast(renderable)
-        if hasattr(renderable, "__rich_console__") and not isclass(renderable):
+        if hasattr(renderable, "__rich_console__") and not isinstance(renderable, type):
             render_iterable = renderable.__rich_console__(self, _options)
         elif isinstance(renderable, str):
             text_renderable = self.render_str(
@@ -1901,14 +1899,14 @@ class Console:
     @staticmethod
     def _caller_frame_info(
         offset: int,
-        currentframe: Callable[[], Optional[FrameType]] = inspect.currentframe,
+        currentframe: Callable[[], Optional[FrameType]] = sys._getframe,
     ) -> Tuple[str, int, Dict[str, Any]]:
         """Get caller frame information.
 
         Args:
             offset (int): the caller offset within the current frame stack.
             currentframe (Callable[[], Optional[FrameType]], optional): the callable to use to
-                retrieve the current frame. Defaults to ``inspect.currentframe``.
+                retrieve the current frame. Defaults to ``sys._getframe``.
 
         Returns:
             Tuple[str, int, Dict[str, Any]]: A tuple containing the filename, the line number and
@@ -1922,15 +1920,15 @@ class Console:
 
         frame = currentframe()
         if frame is not None:
-            # Use the faster currentframe where implemented
             while offset and frame is not None:
                 frame = frame.f_back
                 offset -= 1
             assert frame is not None
             return frame.f_code.co_filename, frame.f_lineno, frame.f_locals
         else:
-            # Fallback to the slower stack
-            frame_info = inspect.stack()[offset]
+            from inspect import stack
+
+            frame_info = stack()[offset]
             return frame_info.filename, frame_info.lineno, frame_info.frame.f_locals
 
     def log(
