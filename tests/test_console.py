@@ -400,9 +400,9 @@ def test_input_password(monkeypatch, capsys) -> None:
         console.file.write(prompt)
         return "bar"
 
-    import rich.console
+    import getpass
 
-    monkeypatch.setattr(rich.console, "getpass", fake_input)
+    monkeypatch.setattr(getpass, "getpass", fake_input)
     console = Console()
     user_input = console.input(prompt="foo:", password=True)
     assert capsys.readouterr().out == "foo:"

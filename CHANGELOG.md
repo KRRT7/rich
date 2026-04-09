@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Defer import of `Traceback` in `logging.py` to reduce `RichHandler` import time
+- Remove module-level `import inspect` from `console.py`; replace `isclass` with `isinstance(x, type)` and `inspect.currentframe` with `sys._getframe`
+- Remove unused `logging` import from `segment.py`
+- Defer `pretty` import in `console.py` to `Console.print()`
+- Defer `scope` import in `console.py` to `Console.log()`
+- Defer `getpass` import in `console.py` to `Console.input()`
+- Defer `configparser` import in `theme.py` to `Theme.from_file()`
+- Replace `pathlib.Path` with `os.path.basename` in `logging.py`
+- Defer `html.escape` and `zlib` imports in `console.py` to export methods
+
 ## [14.3.3] - 2026-02-19
 
 ### Fixed
