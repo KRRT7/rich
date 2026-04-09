@@ -65,34 +65,45 @@ def run_basic_benchmark() -> None:
 
 
 def run_hyperfine_compare(base: str, head: str) -> None:
-    """Use hyperfine + git stash to compare two branches."""
+    """Use hyperfine's --parameter-list to compare two branches in a single run.
+
+    This uses hyperfine's native parameterization so both branches are measured
+    in the same invocation, producing a proper relative comparison with
+    statistical significance.
+    """
     if not shutil.which("hyperfine"):
         print("Error: hyperfine not found. Install from https://github.com/sharkdp/hyperfine")
         sys.exit(1)
 
+    branches = f"{base},{head}"
     print(f"Comparing {base} vs {head} using hyperfine\n")
+
+    # RichHandler import (the key metric — includes traceback chain cost)
+    print("=== RichHandler import ===\n")
     subprocess.run(
         [
             "hyperfine",
             "--warmup", "3",
             "--min-runs", "20",
-            "--shell=none",
-            "--prepare", f"git checkout {base} && pip install -e . -q",
-            "-n", f"RichHandler ({base})",
+            "-L", "branch", branches,
+            "--setup", f"git checkout {{branch}} && {sys.executable} -m pip install -e . -q",
+            "-n", "{branch}",
             f"{sys.executable} -c 'from rich.logging import RichHandler'",
         ],
         check=True,
     )
-    print()
+
+    # Console import (baseline — should be similar across branches)
+    print("\n=== Console import (baseline) ===\n")
     subprocess.run(
         [
             "hyperfine",
             "--warmup", "3",
             "--min-runs", "20",
-            "--shell=none",
-            "--prepare", f"git checkout {head} && pip install -e . -q",
-            "-n", f"RichHandler ({head})",
-            f"{sys.executable} -c 'from rich.logging import RichHandler'",
+            "-L", "branch", branches,
+            "--setup", f"git checkout {{branch}} && {sys.executable} -m pip install -e . -q",
+            "-n", "{branch}",
+            f"{sys.executable} -c 'from rich.console import Console'",
         ],
         check=True,
     )
