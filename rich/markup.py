@@ -1,5 +1,4 @@
 import re
-from ast import literal_eval
 from operator import attrgetter
 from typing import Callable, Iterable, List, Match, NamedTuple, Optional, Tuple, Union
 
@@ -187,6 +186,8 @@ def render(
                             )
 
                         try:
+                            from ast import literal_eval
+
                             meta_params = literal_eval(parameters)
                         except SyntaxError as error:
                             raise MarkupError(

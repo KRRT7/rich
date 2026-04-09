@@ -164,6 +164,35 @@ class Text(JupyterMixin):
         self._spans: List[Span] = spans or []
         self._length: int = len(sanitized_text)
 
+    @classmethod
+    def _from_clean(
+        cls,
+        text: str,
+        style: Union[str, Style] = "",
+        *,
+        justify: Optional["JustifyMethod"] = None,
+        overflow: Optional["OverflowMethod"] = None,
+        no_wrap: Optional[bool] = None,
+        end: str = "\n",
+        tab_size: Optional[int] = None,
+    ) -> "Text":
+        """Fast internal constructor that skips strip_control_codes.
+
+        Only use when text is known to be clean (e.g., from copy/divide on
+        already-sanitized text).
+        """
+        new_text = cls.__new__(cls)
+        new_text._text = [text]
+        new_text.style = style
+        new_text.justify = justify
+        new_text.overflow = overflow
+        new_text.no_wrap = no_wrap
+        new_text.end = end
+        new_text.tab_size = tab_size
+        new_text._spans = []
+        new_text._length = len(text)
+        return new_text
+
     def __len__(self) -> int:
         return self._length
 
@@ -429,8 +458,8 @@ class Text(JupyterMixin):
 
     def blank_copy(self, plain: str = "") -> "Text":
         """Return a new Text instance with copied metadata (but not the string or spans)."""
-        copy_self = Text(
-            plain,
+        return Text._from_clean(
+            strip_control_codes(plain),
             style=self.style,
             justify=self.justify,
             overflow=self.overflow,
@@ -438,11 +467,10 @@ class Text(JupyterMixin):
             end=self.end,
             tab_size=self.tab_size,
         )
-        return copy_self
 
     def copy(self) -> "Text":
         """Return a copy of this instance."""
-        copy_self = Text(
+        copy_self = Text._from_clean(
             self.plain,
             style=self.style,
             justify=self.justify,
@@ -734,6 +762,26 @@ class Text(JupyterMixin):
                 yield _Segment(end)
             return
         get_style = partial(console.get_style, default=Style.null())
+
+        # Fast path for single span (very common case)
+        if len(self._spans) == 1:
+            span = self._spans[0]
+            base_style = get_style(self.style)
+            span_style = get_style(span.style)
+            combined = base_style + span_style
+            if span.start == 0 and span.end >= len(text):
+                # Span covers entire text
+                yield _Segment(text, combined)
+            else:
+                # Span covers part of text
+                if span.start > 0:
+                    yield _Segment(text[: span.start], base_style)
+                yield _Segment(text[span.start : span.end], combined)
+                if span.end < len(text):
+                    yield _Segment(text[span.end :], base_style)
+            if end:
+                yield _Segment(end)
+            return
 
         enumerated_spans = list(enumerate(self._spans, 1))
         style_map = {index: get_style(span.style) for index, span in enumerated_spans}
@@ -1125,9 +1173,9 @@ class Text(JupyterMixin):
         style = self.style
         justify = self.justify
         overflow = self.overflow
-        _Text = Text
+        _from_clean = Text._from_clean
         new_lines = Lines(
-            _Text(
+            _from_clean(
                 text[start:end],
                 style=style,
                 justify=justify,

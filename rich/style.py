@@ -1,8 +1,6 @@
 import sys
 from functools import lru_cache
 from operator import attrgetter
-from pickle import dumps, loads
-from random import randint
 from typing import Any, Dict, Iterable, List, Optional, Type, Union, cast
 
 from . import errors
@@ -193,10 +191,20 @@ class Style:
         )
 
         self._link = link
-        self._meta = None if meta is None else dumps(meta)
-        self._link_id = (
-            f"{randint(0, 999999)}{hash(self._meta)}" if (link or meta) else ""
-        )
+        if meta is not None:
+            from pickle import dumps
+            from random import randint
+
+            self._meta = dumps(meta)
+            self._link_id = f"{randint(0, 999999)}{hash(self._meta)}"
+        elif link:
+            from random import randint
+
+            self._meta = None
+            self._link_id = f"{randint(0, 999999)}"
+        else:
+            self._meta = None
+            self._link_id = ""
         self._hash: Optional[int] = None
         self._null = not (self._set_attributes or color or bgcolor or link or meta)
 
@@ -243,6 +251,9 @@ class Style:
         style._bgcolor = None
         style._set_attributes = 0
         style._attributes = 0
+        from pickle import dumps
+        from random import randint
+
         style._link = None
         style._meta = dumps(meta)
         style._link_id = f"{randint(0, 999999)}{hash(style._meta)}"
@@ -468,7 +479,11 @@ class Style:
     @property
     def meta(self) -> Dict[str, Any]:
         """Get meta information (can not be changed after construction)."""
-        return {} if self._meta is None else cast(Dict[str, Any], loads(self._meta))
+        if self._meta is None:
+            return {}
+        from pickle import loads
+
+        return cast(Dict[str, Any], loads(self._meta))
 
     @property
     def without_color(self) -> "Style":
@@ -483,7 +498,12 @@ class Style:
         style._attributes = self._attributes
         style._set_attributes = self._set_attributes
         style._link = self._link
-        style._link_id = f"{randint(0, 999999)}" if self._link else ""
+        if self._link:
+            from random import randint
+
+            style._link_id = f"{randint(0, 999999)}"
+        else:
+            style._link_id = ""
         style._null = False
         style._meta = None
         style._hash = None
@@ -635,7 +655,12 @@ class Style:
         style._attributes = self._attributes
         style._set_attributes = self._set_attributes
         style._link = self._link
-        style._link_id = f"{randint(0, 999999)}" if self._link else ""
+        if self._link:
+            from random import randint
+
+            style._link_id = f"{randint(0, 999999)}"
+        else:
+            style._link_id = ""
         style._hash = self._hash
         style._null = False
         style._meta = self._meta
@@ -681,7 +706,12 @@ class Style:
         style._attributes = self._attributes
         style._set_attributes = self._set_attributes
         style._link = link
-        style._link_id = f"{randint(0, 999999)}" if link else ""
+        if link:
+            from random import randint
+
+            style._link_id = f"{randint(0, 999999)}"
+        else:
+            style._link_id = ""
         style._hash = None
         style._null = False
         style._meta = self._meta
@@ -744,6 +774,8 @@ class Style:
         new_style._link_id = style._link_id or self._link_id
         new_style._null = style._null
         if self._meta and style._meta:
+            from pickle import dumps
+
             new_style._meta = dumps({**self.meta, **style.meta})
         else:
             new_style._meta = self._meta or style._meta
