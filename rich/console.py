@@ -2,13 +2,11 @@ import inspect
 import os
 import sys
 import threading
-import zlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
 from getpass import getpass
-from html import escape
 from inspect import isclass
 from itertools import islice
 from math import ceil
@@ -2242,6 +2240,8 @@ class Console:
         Returns:
             str: String containing console contents as HTML.
         """
+        from html import escape
+
         assert (
             self.record
         ), "To export console contents set record=True in the constructor or instance"
@@ -2352,6 +2352,9 @@ class Console:
             unique_id (str, optional): unique id that is used as the prefix for various elements (CSS styles, node
                 ids). If not set, this defaults to a computed value based on the recorded content.
         """
+
+        import zlib
+        from html import escape
 
         from rich.cells import cell_len
 
