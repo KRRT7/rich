@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime
@@ -6,14 +8,16 @@ from types import ModuleType
 from typing import TYPE_CHECKING, ClassVar, Iterable, List, Optional, Type, Union
 
 if TYPE_CHECKING:
+    from ._log_render import FormatTimeCallable
+    from .console import Console, ConsoleRenderable
+    from .highlighter import Highlighter
     from .traceback import Traceback
 
 from rich._null_file import NullFile
 
 from . import get_console
-from ._log_render import FormatTimeCallable, LogRender
-from .console import Console, ConsoleRenderable
-from .highlighter import Highlighter, ReprHighlighter
+from ._log_render import LogRender
+from .highlighter import ReprHighlighter
 from .text import Text
 
 
@@ -183,7 +187,7 @@ class RichHandler(Handler):
             except Exception:
                 self.handleError(record)
 
-    def render_message(self, record: LogRecord, message: str) -> "ConsoleRenderable":
+    def render_message(self, record: LogRecord, message: str) -> ConsoleRenderable:
         """Render message text in to Text.
 
         Args:
@@ -212,9 +216,9 @@ class RichHandler(Handler):
         self,
         *,
         record: LogRecord,
-        traceback: Optional["Traceback"],
-        message_renderable: "ConsoleRenderable",
-    ) -> "ConsoleRenderable":
+        traceback: Optional[Traceback],
+        message_renderable: ConsoleRenderable,
+    ) -> ConsoleRenderable:
         """Render log for display.
 
         Args:
