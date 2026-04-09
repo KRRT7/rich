@@ -196,6 +196,8 @@ class ConsoleOptions:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ConsoleOptions):
             return NotImplemented
+        if self is other:
+            return True
         return (
             self.size == other.size
             and self.legacy_windows == other.legacy_windows
