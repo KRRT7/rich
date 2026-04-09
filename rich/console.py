@@ -2198,7 +2198,7 @@ class Console:
                                 error.reason = f"{error.reason}\n*** You may need to add PYTHONIOENCODING=utf-8 to your environment ***"
                                 raise
                     else:
-                        text = self._render_buffer(self._buffer[:])
+                        text = self._render_buffer(self._buffer)
                         try:
                             self.file.write(text)
                         except UnicodeEncodeError as error:
