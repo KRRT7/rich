@@ -33,7 +33,12 @@ def _emoji_replace(
     _emoji_sub: _EmojiSubMethod = re.compile(r"(:(\S*?)(?:(?:\-)(emoji|text))?:)").sub,
 ) -> str:
     """Replace emoji code in text."""
-    get_emoji = _get_emoji().__getitem__
+    global _EMOJI
+    if _EMOJI is None:
+        from ._emoji_codes import EMOJI
+
+        _EMOJI = EMOJI
+    get_emoji = _EMOJI.__getitem__
     variants = {"text": "\uFE0E", "emoji": "\uFE0F"}
     get_variant = variants.get
     default_variant_code = variants.get(default_variant, "") if default_variant else ""

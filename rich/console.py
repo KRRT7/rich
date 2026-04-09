@@ -196,9 +196,20 @@ class ConsoleOptions:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ConsoleOptions):
             return NotImplemented
-        return all(
-            getattr(self, attr) == getattr(other, attr)
-            for attr in ConsoleOptions.__slots__
+        return (
+            self.size == other.size
+            and self.legacy_windows == other.legacy_windows
+            and self.min_width == other.min_width
+            and self.max_width == other.max_width
+            and self.is_terminal == other.is_terminal
+            and self.encoding == other.encoding
+            and self.max_height == other.max_height
+            and self.justify == other.justify
+            and self.overflow == other.overflow
+            and self.no_wrap == other.no_wrap
+            and self.highlight == other.highlight
+            and self.markup == other.markup
+            and self.height == other.height
         )
 
     @property
@@ -243,23 +254,23 @@ class ConsoleOptions:
     ) -> "ConsoleOptions":
         """Update values, return a copy."""
         options = self.copy()
-        if not isinstance(width, NoChange):
+        if width is not NO_CHANGE:
             options.min_width = options.max_width = max(0, width)
-        if not isinstance(min_width, NoChange):
+        if min_width is not NO_CHANGE:
             options.min_width = min_width
-        if not isinstance(max_width, NoChange):
+        if max_width is not NO_CHANGE:
             options.max_width = max_width
-        if not isinstance(justify, NoChange):
+        if justify is not NO_CHANGE:
             options.justify = justify
-        if not isinstance(overflow, NoChange):
+        if overflow is not NO_CHANGE:
             options.overflow = overflow
-        if not isinstance(no_wrap, NoChange):
+        if no_wrap is not NO_CHANGE:
             options.no_wrap = no_wrap
-        if not isinstance(highlight, NoChange):
+        if highlight is not NO_CHANGE:
             options.highlight = highlight
-        if not isinstance(markup, NoChange):
+        if markup is not NO_CHANGE:
             options.markup = markup
-        if not isinstance(height, NoChange):
+        if height is not NO_CHANGE:
             if height is not None:
                 options.max_height = height
             options.height = None if height is None else max(0, height)
