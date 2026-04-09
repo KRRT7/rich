@@ -50,7 +50,6 @@ from .highlighter import NullHighlighter, ReprHighlighter
 from .markup import render as render_markup
 from .measure import Measurement, measure_renderables
 from .pager import Pager, SystemPager
-from .pretty import Pretty, is_expandable
 from .protocol import rich_cast
 from .region import Region
 from .scope import render_scope
@@ -1528,6 +1527,8 @@ class Console:
         Returns:
             List[ConsoleRenderable]: A list of things to render.
         """
+        from .pretty import Pretty as _Pretty, is_expandable as _is_expandable
+
         renderables: List[ConsoleRenderable] = []
         _append = renderables.append
         text: List[Text] = []
@@ -1568,9 +1569,9 @@ class Console:
             elif isinstance(renderable, ConsoleRenderable):
                 check_text()
                 append(renderable)
-            elif is_expandable(renderable):
+            elif _is_expandable(renderable):
                 check_text()
-                append(Pretty(renderable, highlighter=_highlighter))
+                append(_Pretty(renderable, highlighter=_highlighter))
             else:
                 append_text(_highlighter(str(renderable)))
 
