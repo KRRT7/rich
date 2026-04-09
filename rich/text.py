@@ -459,7 +459,7 @@ class Text(JupyterMixin):
     def blank_copy(self, plain: str = "") -> "Text":
         """Return a new Text instance with copied metadata (but not the string or spans)."""
         return Text._from_clean(
-            plain,
+            strip_control_codes(plain),
             style=self.style,
             justify=self.justify,
             overflow=self.overflow,
