@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
 from itertools import islice
@@ -108,9 +107,24 @@ class ConsoleDimensions(NamedTuple):
     """The height of the console in lines."""
 
 
-@dataclass
 class ConsoleOptions:
     """Options for __rich_console__ method."""
+
+    __slots__ = (
+        "size",
+        "legacy_windows",
+        "min_width",
+        "max_width",
+        "is_terminal",
+        "encoding",
+        "max_height",
+        "justify",
+        "overflow",
+        "no_wrap",
+        "highlight",
+        "markup",
+        "height",
+    )
 
     size: ConsoleDimensions
     """Size of console."""
@@ -126,17 +140,66 @@ class ConsoleOptions:
     """Encoding of terminal."""
     max_height: int
     """Height of container (starts as terminal)"""
-    justify: Optional[JustifyMethod] = None
+    justify: Optional[JustifyMethod]
     """Justify value override for renderable."""
-    overflow: Optional[OverflowMethod] = None
+    overflow: Optional[OverflowMethod]
     """Overflow value override for renderable."""
-    no_wrap: Optional[bool] = False
+    no_wrap: Optional[bool]
     """Disable wrapping for text."""
-    highlight: Optional[bool] = None
+    highlight: Optional[bool]
     """Highlight override for render_str."""
-    markup: Optional[bool] = None
+    markup: Optional[bool]
     """Enable markup when rendering strings."""
-    height: Optional[int] = None
+    height: Optional[int]
+
+    def __init__(
+        self,
+        size: ConsoleDimensions,
+        legacy_windows: bool,
+        min_width: int,
+        max_width: int,
+        is_terminal: bool,
+        encoding: str,
+        max_height: int,
+        justify: Optional[JustifyMethod] = None,
+        overflow: Optional[OverflowMethod] = None,
+        no_wrap: Optional[bool] = False,
+        highlight: Optional[bool] = None,
+        markup: Optional[bool] = None,
+        height: Optional[int] = None,
+    ) -> None:
+        self.size = size
+        self.legacy_windows = legacy_windows
+        self.min_width = min_width
+        self.max_width = max_width
+        self.is_terminal = is_terminal
+        self.encoding = encoding
+        self.max_height = max_height
+        self.justify = justify
+        self.overflow = overflow
+        self.no_wrap = no_wrap
+        self.highlight = highlight
+        self.markup = markup
+        self.height = height
+
+    def __repr__(self) -> str:
+        return (
+            f"ConsoleOptions(size={self.size!r}, legacy_windows={self.legacy_windows!r}, "
+            f"min_width={self.min_width!r}, max_width={self.max_width!r}, "
+            f"is_terminal={self.is_terminal!r}, encoding={self.encoding!r}, "
+            f"max_height={self.max_height!r}, justify={self.justify!r}, "
+            f"overflow={self.overflow!r}, no_wrap={self.no_wrap!r}, "
+            f"highlight={self.highlight!r}, markup={self.markup!r}, "
+            f"height={self.height!r})"
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ConsoleOptions):
+            return NotImplemented
+        return all(
+            getattr(self, attr) == getattr(other, attr)
+            for attr in ConsoleOptions.__slots__
+        )
 
     @property
     def ascii_only(self) -> bool:
@@ -149,9 +212,21 @@ class ConsoleOptions:
         Returns:
             ConsoleOptions: a copy of self.
         """
-        options: ConsoleOptions = ConsoleOptions.__new__(ConsoleOptions)
-        options.__dict__ = self.__dict__.copy()
-        return options
+        new = ConsoleOptions.__new__(ConsoleOptions)
+        new.size = self.size
+        new.legacy_windows = self.legacy_windows
+        new.min_width = self.min_width
+        new.max_width = self.max_width
+        new.is_terminal = self.is_terminal
+        new.encoding = self.encoding
+        new.max_height = self.max_height
+        new.justify = self.justify
+        new.overflow = self.overflow
+        new.no_wrap = self.no_wrap
+        new.highlight = self.highlight
+        new.markup = self.markup
+        new.height = self.height
+        return new
 
     def update(
         self,
@@ -531,13 +606,18 @@ COLOR_SYSTEMS = {
 _COLOR_SYSTEMS_NAMES = {system: name for name, system in COLOR_SYSTEMS.items()}
 
 
-@dataclass
 class ConsoleThreadLocals(threading.local):
     """Thread local values for Console context."""
 
-    theme_stack: ThemeStack
-    buffer: List[Segment] = field(default_factory=list)
-    buffer_index: int = 0
+    def __init__(
+        self,
+        theme_stack: ThemeStack,
+        buffer: Optional[List[Segment]] = None,
+        buffer_index: int = 0,
+    ) -> None:
+        self.theme_stack = theme_stack
+        self.buffer: List[Segment] = buffer if buffer is not None else []
+        self.buffer_index = buffer_index
 
 
 class RenderHook(ABC):

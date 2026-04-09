@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import sys
-from typing import TYPE_CHECKING, Optional, Union, Literal
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Literal
 
 from .jupyter import JupyterMixin
 from .segment import Segment
 from .style import Style
-from ._emoji_codes import EMOJI
 from ._emoji_replace import _emoji_replace
 
 
@@ -13,6 +14,25 @@ if TYPE_CHECKING:
 
 
 EmojiVariant = Literal["emoji", "text"]
+
+
+_EMOJI = None
+
+
+def _get_emoji() -> Dict[str, str]:
+    """Lazy-load the emoji codes dict on first use."""
+    global _EMOJI
+    if _EMOJI is None:
+        from ._emoji_codes import EMOJI
+
+        _EMOJI = EMOJI
+    return _EMOJI
+
+
+def __getattr__(name: str) -> Any:
+    if name == "EMOJI":
+        return _get_emoji()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class NoEmoji(Exception):
@@ -43,7 +63,7 @@ class Emoji(JupyterMixin):
         self.style = style
         self.variant = variant
         try:
-            self._char = EMOJI[name]
+            self._char = _get_emoji()[name]
         except KeyError:
             raise NoEmoji(f"No emoji called {name!r}")
         if variant is not None:
@@ -82,7 +102,11 @@ if __name__ == "__main__":  # pragma: no cover
     console = Console(record=True)
 
     columns = Columns(
-        (f":{name}: {name}" for name in sorted(EMOJI.keys()) if "\u200D" not in name),
+        (
+            f":{name}: {name}"
+            for name in sorted(_get_emoji().keys())
+            if "\u200D" not in name
+        ),
         column_first=True,
     )
 
