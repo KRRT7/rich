@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Match, Optional
-import re
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
+if TYPE_CHECKING:
+    from typing import Match
 
-_ReStringMatch = Match[str]  # regex match object
-_ReSubCallable = Callable[[_ReStringMatch], str]  # Callable invoked by re.sub
-_EmojiSubMethod = Callable[[_ReSubCallable, str], str]  # Sub method of a compiled re
+_ReStringMatch = "Match[str]"  # regex match object
+_ReSubCallable = "Callable[[_ReStringMatch], str]"  # Callable invoked by re.sub
+_EmojiSubMethod = "Callable[[_ReSubCallable, str], str]"  # Sub method of a compiled re
 
 _EMOJI = None
+_EMOJI_SUB = None
 _VARIANTS = {"text": "\uFE0E", "emoji": "\uFE0F"}
 
 
@@ -31,14 +33,17 @@ def __getattr__(name: str) -> Any:
 def _emoji_replace(
     text: str,
     default_variant: Optional[str] = None,
-    _emoji_sub: _EmojiSubMethod = re.compile(r"(:(\S*?)(?:(?:\-)(emoji|text))?:)").sub,
 ) -> str:
     """Replace emoji code in text."""
-    global _EMOJI
+    global _EMOJI, _EMOJI_SUB
     if _EMOJI is None:
         from ._emoji_codes import EMOJI
 
         _EMOJI = EMOJI
+    if _EMOJI_SUB is None:
+        import re
+
+        _EMOJI_SUB = re.compile(r"(:(\S*?)(?:(?:\-)(emoji|text))?:)").sub
     get_emoji = _EMOJI.__getitem__
     get_variant = _VARIANTS.get
     default_variant_code = _VARIANTS.get(default_variant, "") if default_variant else ""
@@ -52,4 +57,4 @@ def _emoji_replace(
         except KeyError:
             return emoji_code
 
-    return _emoji_sub(do_replace, text)
+    return _EMOJI_SUB(do_replace, text)

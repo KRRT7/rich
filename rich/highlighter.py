@@ -1,4 +1,3 @@
-import re
 from abc import ABC, abstractmethod
 from typing import ClassVar, Sequence, Union
 
@@ -122,6 +121,8 @@ class JSONHighlighter(RegexHighlighter):
 
     def highlight(self, text: Text) -> None:
         super().highlight(text)
+
+        import re
 
         # Additional work to handle highlighting JSON keys
         plain = text.plain

@@ -1,14 +1,17 @@
-import re
+from __future__ import annotations
+
 import sys
-from colorsys import rgb_to_hls
 from enum import IntEnum
 from functools import lru_cache
 from typing import TYPE_CHECKING, NamedTuple, Optional, Tuple
 
-from ._palettes import EIGHT_BIT_PALETTE, STANDARD_PALETTE, WINDOWS_PALETTE
 from .color_triplet import ColorTriplet
-from .repr import Result, rich_repr
-from .terminal_theme import DEFAULT_TERMINAL_THEME
+from .repr import rich_repr
+
+if TYPE_CHECKING:
+    from .repr import Result
+    from .terminal_theme import TerminalTheme
+    from .text import Text
 
 if TYPE_CHECKING:  # pragma: no cover
     from .terminal_theme import TerminalTheme
@@ -289,14 +292,7 @@ class ColorParseError(Exception):
     """The color could not be parsed."""
 
 
-RE_COLOR = re.compile(
-    r"""^
-\#([0-9a-f]{6})$|
-color\(([0-9]{1,3})\)$|
-rgb\(([\d\s,]+)\)$
-""",
-    re.VERBOSE,
-)
+_RE_COLOR = None
 
 
 @rich_repr
@@ -360,7 +356,11 @@ class Color(NamedTuple):
         """
 
         if theme is None:
+            from .terminal_theme import DEFAULT_TERMINAL_THEME
+
             theme = DEFAULT_TERMINAL_THEME
+        from ._palettes import EIGHT_BIT_PALETTE, WINDOWS_PALETTE
+
         if self.type == ColorType.TRUECOLOR:
             assert self.triplet is not None
             return self.triplet
@@ -446,7 +446,19 @@ class Color(NamedTuple):
                 number=color_number,
             )
 
-        color_match = RE_COLOR.match(color)
+        global _RE_COLOR
+        if _RE_COLOR is None:
+            import re
+
+            _RE_COLOR = re.compile(
+                r"""^
+\#([0-9a-f]{6})$|
+color\(([0-9]{1,3})\)$|
+rgb\(([\d\s,]+)\)$
+""",
+                re.VERBOSE,
+            )
+        color_match = _RE_COLOR.match(color)
         if color_match is None:
             raise ColorParseError(f"{original_color!r} is not a valid color")
 
@@ -515,6 +527,10 @@ class Color(NamedTuple):
 
         if self.type in (ColorType.DEFAULT, system):
             return self
+        from colorsys import rgb_to_hls
+
+        from ._palettes import EIGHT_BIT_PALETTE, STANDARD_PALETTE, WINDOWS_PALETTE
+
         # Convert to 8-bit color from truecolor color
         if system == ColorSystem.EIGHT_BIT and self.system == ColorSystem.TRUECOLOR:
             assert self.triplet is not None
@@ -613,6 +629,8 @@ if __name__ == "__main__":  # pragma: no cover
         if color_number < 16:
             table.add_row(color_cell, f"{color_number}", Text(f'"{name}"'))
         else:
+            from ._palettes import EIGHT_BIT_PALETTE
+
             color = EIGHT_BIT_PALETTE[color_number]  # type: ignore[has-type]
             table.add_row(
                 color_cell, str(color_number), Text(f'"{name}"'), color.hex, color.rgb
