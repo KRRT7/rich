@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
-from getpass import getpass
 from html import escape
 from itertools import islice
 from math import ceil
@@ -2166,7 +2165,9 @@ class Console:
         if prompt:
             self.print(prompt, markup=markup, emoji=emoji, end="")
         if password:
-            result = getpass("", stream=stream)
+            import getpass as _getpass_mod
+
+            result = _getpass_mod.getpass("", stream=stream)
         else:
             if stream:
                 result = stream.readline()
