@@ -438,12 +438,12 @@ class Style:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Style):
             return NotImplemented
-        return self.__hash__() == other.__hash__()
+        return self is other or self.__hash__() == other.__hash__()
 
     def __ne__(self, other: Any) -> bool:
         if not isinstance(other, Style):
             return NotImplemented
-        return self.__hash__() != other.__hash__()
+        return self is not other and self.__hash__() != other.__hash__()
 
     def __hash__(self) -> int:
         if self._hash is not None:
@@ -624,7 +624,10 @@ class Style:
             Style: A new style instance.
         """
         iter_styles = iter(styles)
-        return sum(iter_styles, next(iter_styles))
+        combined = next(iter_styles)
+        for style in iter_styles:
+            combined = combined._add(style)
+        return combined
 
     @classmethod
     def chain(cls, *styles: "Style") -> "Style":
@@ -637,7 +640,10 @@ class Style:
             Style: A new style instance.
         """
         iter_styles = iter(styles)
-        return sum(iter_styles, next(iter_styles))
+        combined = next(iter_styles)
+        for style in iter_styles:
+            combined = combined._add(style)
+        return combined
 
     def copy(self) -> "Style":
         """Get a copy of this style.
