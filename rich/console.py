@@ -50,7 +50,6 @@ from .measure import Measurement, measure_renderables
 from .pager import Pager, SystemPager
 from .protocol import rich_cast
 from .region import Region
-from .scope import render_scope
 from .screen import Screen
 from .segment import Segment
 from .style import Style, StyleType
@@ -1982,6 +1981,8 @@ class Console:
             link_path = None if filename.startswith("<") else os.path.abspath(filename)
             path = filename.rpartition(os.sep)[-1]
             if log_locals:
+                from .scope import render_scope
+
                 locals_map = {
                     key: value
                     for key, value in locals.items()
