@@ -1,7 +1,7 @@
 import logging
+import os
 from datetime import datetime
 from logging import Handler, LogRecord
-from pathlib import Path
 from types import ModuleType
 from typing import ClassVar, Iterable, List, Optional, Type, Union
 
@@ -221,7 +221,7 @@ class RichHandler(Handler):
         Returns:
             ConsoleRenderable: Renderable to display log.
         """
-        path = Path(record.pathname).name
+        path = os.path.basename(record.pathname)
         level = self.get_level_text(record)
         time_format = None if self.formatter is None else self.formatter.datefmt
         log_time = datetime.fromtimestamp(record.created)
