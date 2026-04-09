@@ -9,6 +9,7 @@ _ReSubCallable = Callable[[_ReStringMatch], str]  # Callable invoked by re.sub
 _EmojiSubMethod = Callable[[_ReSubCallable, str], str]  # Sub method of a compiled re
 
 _EMOJI = None
+_VARIANTS = {"text": "\uFE0E", "emoji": "\uFE0F"}
 
 
 def _get_emoji() -> Dict[str, str]:
@@ -39,9 +40,8 @@ def _emoji_replace(
 
         _EMOJI = EMOJI
     get_emoji = _EMOJI.__getitem__
-    variants = {"text": "\uFE0E", "emoji": "\uFE0F"}
-    get_variant = variants.get
-    default_variant_code = variants.get(default_variant, "") if default_variant else ""
+    get_variant = _VARIANTS.get
+    default_variant_code = _VARIANTS.get(default_variant, "") if default_variant else ""
 
     def do_replace(match: Match[str]) -> str:
         emoji_code, emoji_name, variant = match.groups()

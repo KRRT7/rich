@@ -181,7 +181,7 @@ class Segment(NamedTuple):
     @classmethod
     def line(cls) -> "Segment":
         """Make a new line segment."""
-        return cls("\n")
+        return _LINE_SEGMENT
 
     @classmethod
     def apply_style(
@@ -328,7 +328,7 @@ class Segment(NamedTuple):
         append = line.append
 
         adjust_line_length = cls.adjust_line_length
-        new_line_segment = cls("\n")
+        new_line_segment = _LINE_SEGMENT
 
         for segment in segments:
             if "\n" in segment.text and not segment.control:
@@ -694,6 +694,9 @@ class Segment(NamedTuple):
                     return
 
         yield segments_copy()
+
+
+_LINE_SEGMENT = Segment("\n")
 
 
 class Segments:

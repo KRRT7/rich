@@ -24,8 +24,6 @@ def rich_cast(renderable: object) -> "RenderableType":
     Returns:
         object: The result of recursively calling __rich__.
     """
-    from rich.console import RenderableType
-
     rich_visited_set: Set[type] = set()  # Prevent potential infinite loop
     while hasattr(renderable, "__rich__") and not isinstance(renderable, type):
         # Detect object which claim to have all the attributes
@@ -38,4 +36,4 @@ def rich_cast(renderable: object) -> "RenderableType":
             break
         rich_visited_set.add(renderable_type)
 
-    return cast(RenderableType, renderable)
+    return cast("RenderableType", renderable)

@@ -310,6 +310,8 @@ class ConsoleOptions:
         Returns:
             ~ConsoleOptions: New console options instance.
         """
+        if self.height is None:
+            return self
         options = self.copy()
         options.height = None
         return options
@@ -1781,7 +1783,7 @@ class Console:
             if overflow is None:
                 overflow = "ignore"
             crop = False
-        render_hooks = self._render_hooks[:]
+        render_hooks = self._render_hooks[:] if self._render_hooks else []
         with self:
             renderables = self._collect_renderables(
                 objects,
@@ -2052,7 +2054,7 @@ class Console:
         if not objects:
             objects = (NewLine(),)
 
-        render_hooks = self._render_hooks[:]
+        render_hooks = self._render_hooks[:] if self._render_hooks else []
 
         with self:
             renderables = self._collect_renderables(
