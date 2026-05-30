@@ -512,7 +512,6 @@ class ProgressColumn(ABC):
     def __init__(self, table_column: Optional[Column] = None) -> None:
         self._table_column = table_column
         self._renderable_cache: Dict[TaskID, Tuple[float, RenderableType]] = {}
-        self._update_time: Optional[float] = None
 
     def get_table_column(self) -> Column:
         """Get a table column, used to build tasks table."""
@@ -527,8 +526,8 @@ class ProgressColumn(ABC):
         Returns:
             RenderableType: Anything renderable (including str).
         """
-        current_time = task.get_time()
         if self.max_refresh is not None and not task.completed:
+            current_time = task.get_time()
             try:
                 timestamp, renderable = self._renderable_cache[task.id]
             except KeyError:
@@ -536,9 +535,10 @@ class ProgressColumn(ABC):
             else:
                 if timestamp + self.max_refresh > current_time:
                     return renderable
-
+            renderable = self.render(task)
+            self._renderable_cache[task.id] = (current_time, renderable)
+            return renderable
         renderable = self.render(task)
-        self._renderable_cache[task.id] = (current_time, renderable)
         return renderable
 
     @abstractmethod
