@@ -1444,6 +1444,7 @@ class Progress(JupyterMixin):
             refresh (bool): Force a refresh of progress information. Default is False.
             **fields (Any): Additional data fields required for rendering.
         """
+        current_time = self.get_time()
         with self._lock:
             task = self._tasks[task_id]
             completed_start = task.completed
@@ -1462,21 +1463,23 @@ class Progress(JupyterMixin):
             task.fields.update(fields)
             update_completed = task.completed - completed_start
 
-            current_time = self.get_time()
             old_sample_time = current_time - self.speed_estimate_period
             _progress = task._progress
 
             popleft = _progress.popleft
             while _progress and _progress[0].timestamp < old_sample_time:
                 popleft()
+                task._speed_cache = None
             if update_completed > 0:
                 _progress.append(ProgressSample(current_time, update_completed))
+                task._speed_cache = None
             if (
                 task.total is not None
                 and task.completed >= task.total
                 and task.finished_time is None
             ):
                 task.finished_time = task.elapsed
+                task.finished_speed = task.speed
 
         if refresh:
             self.refresh()
