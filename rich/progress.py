@@ -980,6 +980,9 @@ class Task:
     _lock: RLock = field(repr=False, default_factory=RLock)
     """Thread lock."""
 
+    _speed_cache: Optional[float] = field(default=None, init=False, repr=False)
+    """Cached speed value, recomputed when samples change."""
+
     def get_time(self) -> float:
         """float: Get the current time, in seconds."""
         return self._get_time()
@@ -1022,6 +1025,8 @@ class Task:
     @property
     def speed(self) -> Optional[float]:
         """Optional[float]: Get the estimated speed in steps per second."""
+        if self._speed_cache is not None:
+            return self._speed_cache
         if self.start_time is None:
             return None
         with self._lock:
@@ -1034,8 +1039,8 @@ class Task:
             iter_progress = iter(progress)
             next(iter_progress)
             total_completed = sum(sample.completed for sample in iter_progress)
-            speed = total_completed / total_time
-            return speed
+            self._speed_cache = total_completed / total_time
+            return self._speed_cache
 
     @property
     def time_remaining(self) -> Optional[float]:
@@ -1056,6 +1061,7 @@ class Task:
         self._progress.clear()
         self.finished_time = None
         self.finished_speed = None
+        self._speed_cache = None
 
 
 class Progress(JupyterMixin):
