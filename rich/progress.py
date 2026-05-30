@@ -1656,6 +1656,9 @@ class Progress(JupyterMixin):
         """
         with self._lock:
             del self._tasks[task_id]
+            for column in self.columns:
+                if isinstance(column, ProgressColumn):
+                    column._renderable_cache.pop(task_id, None)
 
 
 if __name__ == "__main__":  # pragma: no coverage
