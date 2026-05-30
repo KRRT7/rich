@@ -1524,18 +1524,16 @@ class Progress(JupyterMixin):
         current_time = self.get_time()
         with self._lock:
             task = self._tasks[task_id]
-            completed_start = task.completed
             task.completed += advance
-            update_completed = task.completed - completed_start
             old_sample_time = current_time - self.speed_estimate_period
             _progress = task._progress
 
             popleft = _progress.popleft
             while _progress and _progress[0].timestamp < old_sample_time:
                 popleft()
-            while len(_progress) > 1000:
-                popleft()
-            _progress.append(ProgressSample(current_time, update_completed))
+                task._speed_cache = None
+            _progress.append(ProgressSample(current_time, advance))
+            task._speed_cache = None
             if (
                 task.total is not None
                 and task.completed >= task.total
