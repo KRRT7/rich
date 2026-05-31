@@ -6,13 +6,13 @@ from .segment import ControlCode, ControlType, Segment
 if TYPE_CHECKING:
     from .console import Console, ConsoleOptions, RenderResult
 
-STRIP_CONTROL_CODES: Final = [
+STRIP_CONTROL_CODES: Final = (
     7,  # Bell
     8,  # Backspace
     11,  # Vertical tab
     12,  # Form feed
     13,  # Carriage return
-]
+)
 _CONTROL_STRIP_TRANSLATE: Final = {
     _codepoint: None for _codepoint in STRIP_CONTROL_CODES
 }
