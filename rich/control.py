@@ -178,34 +178,31 @@ class Control:
             yield self.segment
 
 
-def strip_control_codes(
-    text: str, _translate_table: Dict[int, None] = _CONTROL_STRIP_TRANSLATE
+def translate_control_codes(
+    text: str,
+    escape: bool = False,
 ) -> str:
-    """Remove control codes from text.
+    """Remove control codes from text. Optionally replace with their escaped equivalent.
 
     Args:
         text (str): A string possibly contain control codes.
+        escape (bool): If ``True`` replace control codes with their escaped
+            equivalents (e.g. ``\\r``), otherwise remove them.
 
     Returns:
-        str: String with control codes removed.
+        str: String with control codes translated.
     """
-    return text.translate(_translate_table)
-
-
-def escape_control_codes(
-    text: str,
-    _translate_table: Dict[int, str] = CONTROL_ESCAPE,
-) -> str:
-    """Replace control codes with their "escaped" equivalent in the given text.
-    (e.g. "\b" becomes "\\b")
-
-    Args:
-        text (str): A string possibly containing control codes.
-
-    Returns:
-        str: String with control codes replaced with their escaped version.
-    """
-    return text.translate(_translate_table)
+    if (
+        "\x07" not in text
+        and "\x08" not in text
+        and "\x0b" not in text
+        and "\x0c" not in text
+        and "\r" not in text
+    ):
+        return text
+    if not escape:
+        return text.translate(_CONTROL_STRIP_TRANSLATE)
+    return text.translate(CONTROL_ESCAPE)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -22,7 +22,7 @@ from ._wrap import divide_line
 from .align import AlignMethod
 from .cells import cell_len, set_cell_size
 from .containers import Lines
-from .control import strip_control_codes
+from .control import translate_control_codes
 from .emoji import EmojiVariant
 from .jupyter import JupyterMixin
 from .measure import Measurement
@@ -153,7 +153,7 @@ class Text(JupyterMixin):
         tab_size: Optional[int] = None,
         spans: Optional[List[Span]] = None,
     ) -> None:
-        sanitized_text = strip_control_codes(text)
+        sanitized_text = translate_control_codes(text)
         self._text = [sanitized_text]
         self.style = style
         self.justify: Optional["JustifyMethod"] = justify
@@ -410,7 +410,7 @@ class Text(JupyterMixin):
     def plain(self, new_text: str) -> None:
         """Set the text to a new value."""
         if new_text != self.plain:
-            sanitized_text = strip_control_codes(new_text)
+            sanitized_text = translate_control_codes(new_text)
             self._text[:] = [sanitized_text]
             old_length = self._length
             self._length = len(sanitized_text)
@@ -979,7 +979,7 @@ class Text(JupyterMixin):
 
         if len(text):
             if isinstance(text, str):
-                sanitized_text = strip_control_codes(text)
+                sanitized_text = translate_control_codes(text)
                 self._text.append(sanitized_text)
                 offset = len(self)
                 text_length = len(sanitized_text)
@@ -1043,7 +1043,7 @@ class Text(JupyterMixin):
         _Span = Span
         offset = len(self)
         for content, style in tokens:
-            content = strip_control_codes(content)
+            content = translate_control_codes(content)
             append_text(content)
             if style:
                 append_span(_Span(offset, offset + len(content), style))

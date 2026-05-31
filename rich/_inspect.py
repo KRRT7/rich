@@ -3,7 +3,7 @@ from inspect import cleandoc, getdoc, getfile, isclass, ismodule, signature
 from typing import Any, Collection, Iterable, Optional, Tuple, Type, Union
 
 from .console import Group, RenderableType
-from .control import escape_control_codes
+from .control import translate_control_codes
 from .highlighter import ReprHighlighter
 from .jupyter import JupyterMixin
 from .panel import Panel
@@ -234,7 +234,7 @@ class Inspect(JupyterMixin):
         docs = cleandoc(docs).strip()
         if not self.help:
             docs = _first_paragraph(docs)
-        return escape_control_codes(docs)
+        return translate_control_codes(docs, escape=True)
 
 
 def get_object_types_mro(obj: Union[object, Type[Any]]) -> Tuple[type, ...]:
