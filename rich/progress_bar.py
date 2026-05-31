@@ -167,9 +167,7 @@ class ProgressBar(JupyterMixin):
         half_bar_right = " " if ascii else "╸"
         half_bar_left = " " if ascii else "╺"
         complete_halves = (
-            int(width * 2 * completed / self.total)
-            if self.total
-            else width * 2
+            int(width * 2 * completed / self.total) if self.total else width * 2
         )
         is_finished = self.completed >= self.total
         bar_count = complete_halves // 2
