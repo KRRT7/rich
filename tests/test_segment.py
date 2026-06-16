@@ -61,16 +61,16 @@ def test_split_and_crop_lines():
 
 def test_adjust_line_length():
     line = [Segment("Hello", "foo")]
-    assert Segment.adjust_line_length(line, 10, style="bar") == [
+    assert Segment.adjust_line_length(line, 10, 5, style="bar") == [
         Segment("Hello", "foo"),
         Segment("     ", "bar"),
     ]
 
     line = [Segment("H"), Segment("ello, World!")]
-    assert Segment.adjust_line_length(line, 5) == [Segment("H"), Segment("ello")]
+    assert Segment.adjust_line_length(line, 5, 13) == [Segment("H"), Segment("ello")]
 
     line = [Segment("Hello")]
-    assert Segment.adjust_line_length(line, 5) == line
+    assert Segment.adjust_line_length(line, 5, 5) == line
 
 
 def test_get_line_length():

@@ -326,6 +326,7 @@ class Segment(NamedTuple):
         """
         line: List[Segment] = []
         append = line.append
+        line_length = 0
 
         adjust_line_length = cls.adjust_line_length
         new_line_segment = cls("\n")
@@ -337,18 +338,27 @@ class Segment(NamedTuple):
                     _text, new_line, text = text.partition("\n")
                     if _text:
                         append(cls(_text, segment_style))
+                        line_length += cell_len(_text)
                     if new_line:
                         cropped_line = adjust_line_length(
-                            line, length, style=style, pad=pad
+                            line,
+                            length,
+                            style=style,
+                            pad=pad,
+                            line_length=line_length,
                         )
                         if include_new_lines:
                             cropped_line.append(new_line_segment)
                         yield cropped_line
                         line.clear()
+                        line_length = 0
             else:
                 append(segment)
+                line_length += segment.cell_length
         if line:
-            yield adjust_line_length(line, length, style=style, pad=pad)
+            yield adjust_line_length(
+                line, length, style=style, pad=pad, line_length=line_length
+            )
 
     @classmethod
     def adjust_line_length(
@@ -357,6 +367,7 @@ class Segment(NamedTuple):
         length: int,
         style: Optional[Style] = None,
         pad: bool = True,
+        line_length: Optional[int] = None,
     ) -> List["Segment"]:
         """Adjust a line to a given width (cropping or padding as required).
 
@@ -369,7 +380,8 @@ class Segment(NamedTuple):
         Returns:
             List[Segment]: A line of segments with the desired length.
         """
-        line_length = sum(segment.cell_length for segment in line)
+        if line_length is None:
+            line_length = sum(segment.cell_length for segment in line)
         new_line: List[Segment]
 
         if line_length < length:
@@ -452,7 +464,13 @@ class Segment(NamedTuple):
         adjust_line_length = cls.adjust_line_length
         shaped_lines = lines[:_height]
         shaped_lines[:] = [
-            adjust_line_length(line, width, style=style) for line in lines
+            adjust_line_length(
+                line,
+                width,
+                style=style,
+                line_length=sum(segment.cell_length for segment in line),
+            )
+            for line in lines
         ]
         if len(shaped_lines) < _height:
             shaped_lines.extend([blank] * (_height - len(shaped_lines)))

@@ -760,6 +760,7 @@ class Syntax(JupyterMixin):
                         _Segment.adjust_line_length(
                             segments,
                             render_options.max_width,
+                            sum(segment.cell_length for segment in segments),
                             style=background_style,
                             pad=not transparent_background,
                         )

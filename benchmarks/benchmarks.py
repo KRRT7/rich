@@ -95,35 +95,47 @@ class SyntaxWrappingSuite:
 
 
 class TableSuite:
+    def setup(self):
+        self.table_heavy = self._make_table(width=30)
+        self.table_no_wrap = self._make_table(width=100)
+        self.console_heavy = Console(
+            file=StringIO(), color_system="truecolor", legacy_windows=False, width=30
+        )
+        self.console_no_wrap = Console(
+            file=StringIO(), color_system="truecolor", legacy_windows=False, width=100
+        )
+        # Warm the render path once to reduce first-use variance.
+        self.console_heavy.print(self.table_heavy)
+        self.console_no_wrap.print(self.table_no_wrap)
+
     def time_table_no_wrapping(self):
-        self._print_table(width=100)
+        for _ in range(5):
+            self.console_no_wrap.print(self.table_no_wrap)
 
     def time_table_heavy_wrapping(self):
-        self._print_table(width=30)
+        for _ in range(5):
+            self.console_heavy.print(self.table_heavy)
 
-    def _print_table(self, width):
+    def _make_table(self, width):
         table = Table(title="Star Wars Movies")
-        console = Console(
-            file=StringIO(), color_system="truecolor", legacy_windows=False, width=width
-        )
         table.add_column("Released", justify="right", style="cyan", no_wrap=True)
         table.add_column("Title", style="magenta")
         table.add_column("Box Office", justify="right", style="green")
-        table.add_row(
-            "Dec 20, 2019", "[b]Star Wars[/]: The Rise of Skywalker", "$952,110,690"
-        )
-        table.add_row(
-            "May 25, 2018", "Solo: A [red][b]Star Wars[/] Story[/]", "$393,151,347"
-        )
-        table.add_row(
-            "Dec 15, 2017",
-            "[b red]Star Wars[/] Ep. V111: The Last Jedi",
-            "$1,332,539,889",
-        )
-        table.add_row(
-            "Dec 16, 2016", "Rogue One: A [blue]Star Wars[/] Story", "$1,332,439,889"
-        )
-        console.print(table)
+        rows = [
+            ("Dec 20, 2019", "[b]Star Wars[/]: The Rise of Skywalker", "$952,110,690"),
+            ("May 25, 2018", "Solo: A [red][b]Star Wars[/] Story[/]", "$393,151,347"),
+            (
+                "Dec 15, 2017",
+                "[b red]Star Wars[/] Ep. V111: The Last Jedi",
+                "$1,332,539,889",
+            ),
+            ("Dec 16, 2016", "Rogue One: A [blue]Star Wars[/] Story", "$1,332,439,889"),
+        ]
+        # Repeat content to increase the amount of render work per benchmark run.
+        for _ in range(4):
+            for row in rows:
+                table.add_row(*row)
+        return table
 
 
 class PrettySuite:
